@@ -9,6 +9,15 @@ export function activate(context: vscode.ExtensionContext) {
 	const spellCheckerDiagnostics = vscode.languages.createDiagnosticCollection('spellchecker');
 	context.subscriptions.push(spellCheckerDiagnostics);
 
+	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
+		if (document.languageId === 'markdown' || document.languageId === 'plaintext') {
+			const editor = vscode.window.activeTextEditor;
+			if (editor && editor.document === document) {
+				checkSpelling(editor, spellCheckerDiagnostics);
+			}
+		}
+	}));
+
 	let disposable = vscode.commands.registerCommand('extension.checkSpelling', () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {

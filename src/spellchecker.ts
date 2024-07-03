@@ -8,18 +8,6 @@ const cache = new Map<string, boolean | string[]>();
 
 function loadDictionary() {
     const filePath = path.join(__dirname, '', 'dictionary.txt');
-    console.log(filePath);
-    // fs.readFile(filePath, 'utf8', (err, data) => {
-    //     if (err) {
-    //         console.error(err);
-    //         return;
-    //     }
-    //     const words = data.split('\n');
-
-    //     for (const word of words) {
-    //         dictionary.set(word.toLowerCase(), true);
-    //     }
-    // });
     const words = fs.readFileSync(filePath, 'utf8').split('\n');
 
     for (const word of words) {
