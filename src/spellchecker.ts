@@ -25,7 +25,7 @@ function loadDictionary() {
     for (const word of words) {
         const cleanedWord = word.toLowerCase();
         // console.log(cleanedWord);
-        if (cleanedWord.length > 1) {
+        if (cleanedWord.length >= 1) {
             dictionary.set(cleanedWord, true);
         }
     }
@@ -62,9 +62,14 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
 
 
 function spellCheckDocument(text: string): { word: string, index: number }[] {
-    const words = text.match(/\b\w+\b/g) || [];
+    const urlRegex = /\b(https?:\/\/|www\.)\S+\b/gi;
+    const cleanText = text.replace(urlRegex, '');
+    const words = cleanText.match(/(?<![\w\*\_\-])([a-zA-Z]+)(?![\w\*\_\-])/g) || [];
     const misspelledWords = [];
     let index = 0;
+
+    console.log(dictionary.get('a'))
+    console.log(dictionary.get('I'))
 
     if (words) {
         for (const word of words) {
@@ -86,7 +91,6 @@ function isWordCorrect(word: string): boolean {
         return cache.get(word) as boolean;
     }
 
-    console.log(dictionary.get(word.toLowerCase()));
     const isCorrect = !!dictionary.get(word.toLowerCase());
     cache.set(word, isCorrect);
 
