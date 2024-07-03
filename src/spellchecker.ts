@@ -24,10 +24,8 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
     const misspelledWords = spellCheckDocument(text);
     const diagArray: vscode.Diagnostic[] = [];
 
-    // Clear previous diagnostics
     diagnostics.clear();
 
-    // Generate diagnostics for each misspelled word
     misspelledWords.forEach(wordInfo => {
         const range = new vscode.Range(
             editor.document.positionAt(wordInfo.index),
@@ -37,16 +35,13 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
         const diagnostic = new vscode.Diagnostic(
             range,
             `Misspelled word: ${wordInfo.word}`,
-            vscode.DiagnosticSeverity.Error // You can choose the severity level
+            vscode.DiagnosticSeverity.Error
         );
         diagArray.push(diagnostic);
     });
 
-    // Set the diagnostics for this document
     diagnostics.set(editor.document.uri, diagArray);
 }
-
-
 
 
 function spellCheckDocument(text: string): { word: string, index: number }[] {
@@ -56,8 +51,6 @@ function spellCheckDocument(text: string): { word: string, index: number }[] {
     const misspelledWords = [];
     let index = 0;
 
-    console.log(dictionary.get('a'))
-    console.log(dictionary.get('I'))
 
     if (words) {
         for (const word of words) {
@@ -90,7 +83,7 @@ function getSuggestions(misspelledWord: string): string[] {
     const MAX_DISTANCE = 2;
     const suggestions: string[] = [];
 
-    dictionary.keys().forEach((word: string) => {
+    dictionary.keysWithPrefix(misspelledWord[0]).forEach((word: string) => {
         const distance = levenshteinDistance(misspelledWord, word);
 
         if (distance <= MAX_DISTANCE) {
