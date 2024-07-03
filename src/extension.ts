@@ -1,18 +1,23 @@
 import * as vscode from 'vscode';
-import { spellCheckDocument, loadDictionary } from './spellchecker';
+import { spellCheckDocument, loadDictionary, checkSpelling } from './spellchecker';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	console.log("Spellchecker now active!");
+
+	const spellCheckerDiagnostics = vscode.languages.createDiagnosticCollection('spellchecker');
+	context.subscriptions.push(spellCheckerDiagnostics);
+
 	let disposable = vscode.commands.registerCommand('extension.checkSpelling', () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
-			const text = editor.document.getText();
-			const misspelledWords = spellCheckDocument(text);
+			// const text = editor.document.getText();
+			// const misspelledWords = spellCheckDocument(text);
 
+			checkSpelling(editor, spellCheckerDiagnostics);
 
-			vscode.window.showInformationMessage(`Misspelled words: ${misspelledWords.join(', ')}`);
+			// vscode.window.showInformationMessage(`Misspelled words: ${misspelledWords.join(', ')}`);
 		}
 	})
 	// Use the console to output diagnostic information (console.log) and errors (console.error)

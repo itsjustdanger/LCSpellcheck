@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import { Trie } from 'ternary-search-trie';
 import path from 'path';
 
@@ -30,19 +31,51 @@ function loadDictionary() {
     }
 }
 
+function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.DiagnosticCollection) {
+    const text = editor.document.getText();
+    const misspelledWords = spellCheckDocument(text);
+    const diagArray: vscode.Diagnostic[] = [];
 
-function spellCheckDocument(text: string): string[] {
+    // Clear previous diagnostics
+    diagnostics.clear();
+
+    // Generate diagnostics for each misspelled word
+    misspelledWords.forEach(wordInfo => {
+        const range = new vscode.Range(
+            editor.document.positionAt(wordInfo.index),
+            editor.document.positionAt(wordInfo.index + wordInfo.word.length)
+        );
+
+        const diagnostic = new vscode.Diagnostic(
+            range,
+            `Misspelled word: ${wordInfo.word}`,
+            vscode.DiagnosticSeverity.Error // You can choose the severity level
+        );
+        diagArray.push(diagnostic);
+    });
+
+    // Set the diagnostics for this document
+    diagnostics.set(editor.document.uri, diagArray);
+}
+
+
+
+
+function spellCheckDocument(text: string): { word: string, index: number }[] {
     const words = text.match(/\b\w+\b/g) || [];
     const misspelledWords = [];
+    let index = 0;
 
     if (words) {
         for (const word of words) {
+            index = text.indexOf(word, index);
+
             if (!isWordCorrect(word)) {
-                misspelledWords.push(word);
+                misspelledWords.push({ word, index });
+                index += word.length;
             }
         }
     }
-
 
     return misspelledWords;
 }
@@ -74,4 +107,4 @@ function isCloseMatch(word1: string, word2: string): boolean {
 
 loadDictionary();
 
-export { spellCheckDocument, loadDictionary };
+export { spellCheckDocument, loadDictionary, checkSpelling };
