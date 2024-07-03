@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (editor) {
 			const word = editor.document.getText(editor.selection);
 			const suggestions = getSuggestions(word);
-			// Here you might want to show a quick pick or another UI element to select the suggestion
+
 			vscode.window.showQuickPick(suggestions, {
 				placeHolder: 'Choose the correct spelling',
 			}).then(selection => {

@@ -122,16 +122,18 @@ class SpellingCodeActionProvider implements vscode.CodeActionProvider {
 
     public provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeAction[]> {
         const misspelledWord = document.getText(range);
-        const suggestions = getSuggestions(misspelledWord); // This needs to be implemented to fetch suggestions based on the misspelled word
+        const suggestions = getSuggestions(misspelledWord);
+        const fixes = [];
 
-        return suggestions.map(suggestion => this.createFix(document, range, suggestion));
-    }
+        for (const suggestion of suggestions) {
+            const fix = new vscode.CodeAction(`Change to '${suggestion}'`, vscode.CodeActionKind.QuickFix);
+            fix.edit = new vscode.WorkspaceEdit();
+            fix.edit.replace(document.uri, range, suggestion);
 
-    private createFix(document: vscode.TextDocument, range: vscode.Range, suggestion: string): vscode.CodeAction {
-        const fix = new vscode.CodeAction(`Change to '${suggestion}'`, vscode.CodeActionKind.QuickFix);
-        fix.edit = new vscode.WorkspaceEdit();
-        fix.edit.replace(document.uri, range, suggestion);
-        return fix;
+            fixes.push(fix);
+        }
+
+        return fixes;
     }
 }
 
