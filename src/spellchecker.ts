@@ -87,17 +87,40 @@ function isWordCorrect(word: string): boolean {
 
 
 function getSuggestions(misspelledWord: string): string[] {
-    return ["test"];
-    // return dictionary.keysWithPrefix(misspelledWord.substring(0, 2))
-    //     .filter((word: string) => isCloseMatch(misspelledWord, word))
-    //     .slice(0, 5);
+    const MAX_DISTANCE = 2;
+    const suggestions: string[] = [];
+
+    dictionary.keys().forEach((word: string) => {
+        const distance = levenshteinDistance(misspelledWord, word);
+
+        if (distance <= MAX_DISTANCE) {
+            suggestions.push(word);
+        }
+    });
+
+    return suggestions.sort((a, b) => levenshteinDistance(misspelledWord, a) - levenshteinDistance(misspelledWord, b));
 }
 
-function isCloseMatch(word1: string, word2: string): boolean {
+function levenshteinDistance(s: string, t: string) {
+    const d = [];
 
-    return true
+    const m = s.length;
+    const n = t.length;
+
+    for (let i = 0; i <= m; i++) {
+        d[i] = [i];
+    }
+    for (let j = 0; j <= n; j++) {
+        d[0][j] = j;
+    }
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+            d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+        }
+    }
+    return d[m][n];
 }
-
 
 class SpellingCodeActionProvider implements vscode.CodeActionProvider {
     public static readonly providedCodeActionKinds = [
