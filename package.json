@@ -9,15 +9,31 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "extension.checkSpelling",
         "title": "Spell Check"
+      },
+      {
+        "command": "extension.correctSpelling",
+        "title": "Correct Spelling",
+        "category": "Spelling"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "edcitorTextFocus",
+          "command": "extension.correctSpelling",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

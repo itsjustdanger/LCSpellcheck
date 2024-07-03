@@ -87,9 +87,10 @@ function isWordCorrect(word: string): boolean {
 
 
 function getSuggestions(misspelledWord: string): string[] {
-    return dictionary.keysWithPrefix(misspelledWord.substring(0, 2))
-        .filter((word: string) => isCloseMatch(misspelledWord, word))
-        .slice(0, 5);
+    return ["test"];
+    // return dictionary.keysWithPrefix(misspelledWord.substring(0, 2))
+    //     .filter((word: string) => isCloseMatch(misspelledWord, word))
+    //     .slice(0, 5);
 }
 
 function isCloseMatch(word1: string, word2: string): boolean {
@@ -97,6 +98,27 @@ function isCloseMatch(word1: string, word2: string): boolean {
     return true
 }
 
+
+class SpellingCodeActionProvider implements vscode.CodeActionProvider {
+    public static readonly providedCodeActionKinds = [
+        vscode.CodeActionKind.QuickFix
+    ];
+
+    public provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeAction[]> {
+        const misspelledWord = document.getText(range);
+        const suggestions = getSuggestions(misspelledWord); // This needs to be implemented to fetch suggestions based on the misspelled word
+
+        return suggestions.map(suggestion => this.createFix(document, range, suggestion));
+    }
+
+    private createFix(document: vscode.TextDocument, range: vscode.Range, suggestion: string): vscode.CodeAction {
+        const fix = new vscode.CodeAction(`Change to '${suggestion}'`, vscode.CodeActionKind.QuickFix);
+        fix.edit = new vscode.WorkspaceEdit();
+        fix.edit.replace(document.uri, range, suggestion);
+        return fix;
+    }
+}
+
 loadDictionary();
 
-export { spellCheckDocument, loadDictionary, checkSpelling };
+export { spellCheckDocument, loadDictionary, checkSpelling, SpellingCodeActionProvider, getSuggestions };
