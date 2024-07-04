@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { spellCheckDocument, loadDictionary, checkSpelling, SpellingCodeActionProvider, getSuggestions } from './spellchecker';
+import { checkSpelling, SpellingCodeActionProvider, getSuggestions } from './spellchecker';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -26,12 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = vscode.commands.registerCommand('extension.checkSpelling', () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
-			// const text = editor.document.getText();
-			// const misspelledWords = spellCheckDocument(text);
-
 			checkSpelling(editor, spellCheckerDiagnostics);
-
-			// vscode.window.showInformationMessage(`Misspelled words: ${misspelledWords.join(', ')}`);
 		}
 	})
 
@@ -56,10 +51,4 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 }
 
-function createDiagnostic(range: vscode.Range, word: string): vscode.Diagnostic {
-	const diagnostic = new vscode.Diagnostic(range, `Misspelled word: ${word}`, vscode.DiagnosticSeverity.Error);
-	return diagnostic;
-}
-
-// This method is called when your extension is deactivated
 export function deactivate() { }

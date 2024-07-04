@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { Trie } from 'ternary-search-trie';
-import path from 'path';
+import path, { join } from 'path';
 
 const dictionary = new Trie();
 const cache = new Map<string, boolean | string[]>();
@@ -45,12 +45,13 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
 
 
 function spellCheckDocument(text: string): { word: string, index: number }[] {
-    const urlRegex = /\b(https?:\/\/|www\.)\S+\b/gi;
+    const urlRegex = '' // /\b(https?:\/\/|www\.)\S+\b/gi;
     const cleanText = text.replace(urlRegex, '');
-    const words = cleanText.match(/(?<![\w\*\_\-])([a-zA-Z]+)(?![\w\*\_\-])/g) || [];
+    const codeRegex = /(?:```[\s\S]*?```)|(?:`[\s\S]*?`)/g;
+    const sansCodeText = cleanText.replace(codeRegex, '');
+    const words = sansCodeText.match(/(?<![\w\*\_\-])([a-zA-Z]+)(?![\w\*\_\-])/g) || [];
     const misspelledWords = [];
     let index = 0;
-
 
     if (words) {
         for (const word of words) {
