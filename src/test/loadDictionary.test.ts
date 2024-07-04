@@ -1,12 +1,12 @@
-// test/loadDictionary.test.js
-const assert = require('chai').assert;
-const { loadDictionary } = require('../extension');
+const assert = require('assert');
+const { describe, it } = require('mocha');
+const { loadDictionary } = require('../spellchecker');
 
 describe('loadDictionary', function () {
     it('should load dictionary', function () {
         const context = { globalState: { get: () => undefined } }; // Mock context
         const dictionary = loadDictionary(context);
-        assert.isTrue(dictionary.has('example'));
+        assert.equal(dictionary.get('example'), true);
     });
 });
 
