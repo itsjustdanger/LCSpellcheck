@@ -19,7 +19,6 @@ describe('spellCheckDocument', function () {
             }
 
         };
-        const mockDiagnostics = { clear: () => { }, set: () => { } };
         const dictionary = generateTestDict();
 
         const misspelled = spellCheckDocument(mockEditor.document.getText(), dictionary);
@@ -33,7 +32,6 @@ describe('spellCheckDocument', function () {
         const mockEditor = {
             document: { getText: () => "This is an example text with some correct words." }
         };
-        const mockDiagnostics = { clear: () => { }, set: () => { } };
         const dictionary = generateTestDict();
 
         const misspelled = spellCheckDocument(mockEditor.document.getText(), dictionary);
@@ -45,7 +43,6 @@ describe('spellCheckDocument', function () {
         const mockEditor = {
             document: { getText: () => "This is an example text with some correct words: https://www.example.com" }
         };
-        const mockDiagnostics = { clear: () => { }, set: () => { } };
         const dictionary = generateTestDict();
 
         const misspelled = spellCheckDocument(mockEditor.document.getText(), dictionary);
@@ -57,7 +54,6 @@ describe('spellCheckDocument', function () {
         const mockEditor = {
             document: { getText: () => "This is an example text with some correct words: example123" }
         };
-        const mockDiagnostics = { clear: () => { }, set: () => { } };
         const dictionary = generateTestDict();
 
         const misspelled = spellCheckDocument(mockEditor.document.getText(), dictionary);
@@ -72,7 +68,6 @@ describe('spellCheckDocument', function () {
                 positionAt: (index: number) => { return { line: 0, character: index } }
             },
         };
-        const mockDiagnostics = { clear: () => { }, set: () => { } };
         const dictionary = generateTestDict();
 
         const misspelled = spellCheckDocument(mockEditor.document.getText(), dictionary);
