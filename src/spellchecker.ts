@@ -3,25 +3,28 @@ import * as vscode from 'vscode';
 import { Trie } from 'ternary-search-trie';
 import path, { join } from 'path';
 
-const dictionary = new Trie();
 const cache = new Map<string, boolean | string[]>();
 
-function loadDictionary() {
+function loadDictionary(): Trie<boolean | null> {
+    const dictionary: Trie<boolean | null> = new Trie();
     const filePath = path.join(__dirname, '', 'dictionary.txt');
     const words = fs.readFileSync(filePath, 'utf8').split('\n');
 
     for (const word of words) {
         const cleanedWord = word.toLowerCase();
-        // console.log(cleanedWord);
+
         if (cleanedWord.length >= 1) {
             dictionary.set(cleanedWord, true);
         }
     }
+
+    return dictionary
 }
 
-function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.DiagnosticCollection) {
+function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.DiagnosticCollection, dictionary: Trie<boolean | null>) {
+
     const text = editor.document.getText();
-    const misspelledWords = spellCheckDocument(text);
+    const misspelledWords = spellCheckDocument(text, dictionary);
     const diagArray: vscode.Diagnostic[] = [];
 
     diagnostics.clear();
@@ -41,11 +44,13 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
     });
 
     diagnostics.set(editor.document.uri, diagArray);
+
+    return misspelledWords;
 }
 
 
-function spellCheckDocument(text: string): { word: string, index: number }[] {
-    const urlRegex = '' // /\b(https?:\/\/|www\.)\S+\b/gi;
+function spellCheckDocument(text: string, dictionary: Trie<boolean | null>): { word: string, index: number }[] {
+    const urlRegex = /\b(https?:\/\/|www\.)\S+\b/gi;
     const cleanText = text.replace(urlRegex, '');
     const codeRegex = /(?:```[\s\S]*?```)|(?:`[\s\S]*?`)/g;
     const sansCodeText = cleanText.replace(codeRegex, '');
@@ -57,7 +62,7 @@ function spellCheckDocument(text: string): { word: string, index: number }[] {
         for (const word of words) {
             index = text.indexOf(word, index);
 
-            if (!isWordCorrect(word)) {
+            if (!isWordCorrect(word, dictionary)) {
                 misspelledWords.push({ word, index });
                 index += word.length;
             }
@@ -68,7 +73,7 @@ function spellCheckDocument(text: string): { word: string, index: number }[] {
 }
 
 
-function isWordCorrect(word: string): boolean {
+function isWordCorrect(word: string, dictionary: Trie<boolean | null>): boolean {
     if (cache.has(word)) {
         return cache.get(word) as boolean;
     }
@@ -80,7 +85,11 @@ function isWordCorrect(word: string): boolean {
 }
 
 
-function getSuggestions(misspelledWord: string): string[] {
+function getSuggestions(misspelledWord: string, dictionary: Trie<boolean | null>): string[] {
+    if (isWordCorrect(misspelledWord, dictionary)) {
+        return [];
+    }
+
     const MAX_DISTANCE = 2;
     const suggestions: string[] = [];
 
@@ -116,14 +125,37 @@ function levenshteinDistance(s: string, t: string) {
     return d[m][n];
 }
 
+function addWordToDictionary(word: string, context: vscode.ExtensionContext, dictionary: Trie<boolean | null>) {
+    const addedWords: string[] = context.globalState.get('addedWords', []);
+
+    if (!addedWords.includes(word)) {
+        addedWords.push(word);
+        context.globalState.update('addedWords', addedWords);
+        dictionary.set(word, true);
+    }
+
+    console.log("Added Word");
+    console.log(context.globalState.get('addedWords'));
+    console.log(dictionary.get(word));
+}
+
+function loadAddedWords(context: vscode.ExtensionContext, dictionary: Trie<boolean | null>) {
+    const addedWords: string[] = context.globalState.get('addedWords', []);
+    addedWords.forEach((word: string) => {
+        dictionary.set(word, true);
+    });
+}
+
 class SpellingCodeActionProvider implements vscode.CodeActionProvider {
+    constructor(private dictionary: Trie<boolean | null>) { }
+
     public static readonly providedCodeActionKinds = [
         vscode.CodeActionKind.QuickFix
     ];
 
     public provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeAction[]> {
         const misspelledWord = document.getText(range);
-        const suggestions = getSuggestions(misspelledWord);
+        const suggestions = getSuggestions(misspelledWord, this.dictionary);
         const fixes = [];
 
         for (const suggestion of suggestions) {
@@ -134,10 +166,17 @@ class SpellingCodeActionProvider implements vscode.CodeActionProvider {
             fixes.push(fix);
         }
 
+        const addition = new vscode.CodeAction(`Add '${misspelledWord}' to dictionary`, vscode.CodeActionKind.QuickFix);
+        addition.command = {
+            command: 'extension.addWordToDictionary',
+            title: 'Add word to dictionary',
+            arguments: [misspelledWord]
+        };
+
+        fixes.push(addition);
+
         return fixes;
     }
 }
 
-loadDictionary();
-
-export { spellCheckDocument, loadDictionary, checkSpelling, SpellingCodeActionProvider, getSuggestions };
+export { isWordCorrect, spellCheckDocument, loadDictionary, loadAddedWords, checkSpelling, SpellingCodeActionProvider, getSuggestions, addWordToDictionary };
