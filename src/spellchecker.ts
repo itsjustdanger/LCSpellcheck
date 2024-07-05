@@ -3,8 +3,6 @@ import * as vscode from 'vscode';
 import { Trie } from 'ternary-search-trie';
 import path, { join } from 'path';
 
-const cache = new Map<string, boolean | string[]>();
-
 function loadDictionary(): Trie<boolean | null> {
     const dictionary: Trie<boolean | null> = new Trie();
     const filePath = path.join(__dirname, '', 'dictionary.txt');
@@ -21,15 +19,19 @@ function loadDictionary(): Trie<boolean | null> {
     return dictionary
 }
 
-function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.DiagnosticCollection, dictionary: Trie<boolean | null>) {
+function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.DiagnosticCollection, dictionary: Trie<boolean | null>, ignoreList: Trie<boolean | null>) {
 
     const text = editor.document.getText();
     const misspelledWords = spellCheckDocument(text, dictionary);
     const diagArray: vscode.Diagnostic[] = [];
 
     diagnostics.clear();
-
+    console.log(`Misspelled words: ${misspelledWords.length}`);
+    misspelledWords.map(wordInfo => console.log(wordInfo.word));
     misspelledWords.forEach(wordInfo => {
+        if (ignoreList.get(wordInfo.word)) {
+            return;
+        }
         const range = new vscode.Range(
             editor.document.positionAt(wordInfo.index),
             editor.document.positionAt(wordInfo.index + wordInfo.word.length)
@@ -63,6 +65,9 @@ function spellCheckDocument(text: string, dictionary: Trie<boolean | null>): { w
             index = text.indexOf(word, index);
 
             if (!isWordCorrect(word, dictionary)) {
+                console.log('Misspelled word: ' + word)
+                console.log(`Dict has ${word} | ${dictionary.get(word)}`)
+                console.log(`Dict has ${word.toLowerCase()} | ${dictionary.get(word.toLowerCase())}`)
                 misspelledWords.push({ word, index });
                 index += word.length;
             }
@@ -74,12 +79,9 @@ function spellCheckDocument(text: string, dictionary: Trie<boolean | null>): { w
 
 
 function isWordCorrect(word: string, dictionary: Trie<boolean | null>): boolean {
-    if (cache.has(word)) {
-        return cache.get(word) as boolean;
-    }
+    const wordLower = word.toLowerCase();
 
-    const isCorrect = !!dictionary.get(word.toLowerCase());
-    cache.set(word, isCorrect);
+    const isCorrect = !!dictionary.get(wordLower);
 
     return isCorrect
 }
@@ -101,7 +103,7 @@ function getSuggestions(misspelledWord: string, dictionary: Trie<boolean | null>
         }
     });
 
-    return suggestions.sort((a, b) => levenshteinDistance(misspelledWord, a) - levenshteinDistance(misspelledWord, b));
+    return suggestions.sort((a, b) => levenshteinDistance(misspelledWord, a) - levenshteinDistance(misspelledWord, b)).slice(0, 5);
 }
 
 function levenshteinDistance(s: string, t: string) {
@@ -131,19 +133,36 @@ function addWordToDictionary(word: string, context: vscode.ExtensionContext, dic
     if (!addedWords.includes(word)) {
         addedWords.push(word);
         context.globalState.update('addedWords', addedWords);
-        dictionary.set(word, true);
+        dictionary.set(word.toLowerCase(), true);
     }
-
-    console.log("Added Word");
-    console.log(context.globalState.get('addedWords'));
-    console.log(dictionary.get(word));
 }
 
 function loadAddedWords(context: vscode.ExtensionContext, dictionary: Trie<boolean | null>) {
     const addedWords: string[] = context.globalState.get('addedWords', []);
     addedWords.forEach((word: string) => {
-        dictionary.set(word, true);
+        dictionary.set(word.toLowerCase(), true);
     });
+}
+
+function addWordToIgnoreList(word: string, context: vscode.ExtensionContext, ignoredWords: Trie<boolean | null>) {
+    const ignoreList: string[] = context.globalState.get('ignoreList', []);
+
+    if (!ignoreList.includes(word)) {
+        ignoreList.push(word);
+        context.globalState.update('ignoreList', ignoreList);
+        ignoredWords.set(word, true);
+    }
+}
+
+function loadIgnoredWords(context: vscode.ExtensionContext): Trie<boolean | null> {
+    const ignoreWords: Trie<boolean | null> = new Trie()
+    const ignoredWords = context.globalState.get('ignoreList', []);
+
+    ignoredWords.forEach((word: string) => {
+        ignoreWords.set(word, true);
+    });
+
+    return ignoreWords
 }
 
 class SpellingCodeActionProvider implements vscode.CodeActionProvider {
@@ -175,8 +194,17 @@ class SpellingCodeActionProvider implements vscode.CodeActionProvider {
 
         fixes.push(addition);
 
+        const ignore = new vscode.CodeAction(`Ignore '${misspelledWord}'`, vscode.CodeActionKind.QuickFix);
+        ignore.command = {
+            command: 'extension.addWordToIgnoreList',
+            title: 'Ignore word',
+            arguments: [misspelledWord]
+        };
+
+        fixes.push(ignore);
+
         return fixes;
     }
 }
 
-export { isWordCorrect, spellCheckDocument, loadDictionary, loadAddedWords, checkSpelling, SpellingCodeActionProvider, getSuggestions, addWordToDictionary };
+export { isWordCorrect, spellCheckDocument, loadDictionary, loadAddedWords, checkSpelling, SpellingCodeActionProvider, getSuggestions, addWordToDictionary, addWordToIgnoreList, loadIgnoredWords };

@@ -28,6 +28,11 @@
         "command": "extension.addWordToDictionary",
         "title": "Add Word to Dictionary",
         "category": "Spelling"
+      },
+      {
+        "command": "extension.addWordToIgnoreList",
+        "title": "Ignore Word",
+        "category": "Spelling"
       }
     ],
     "menus": {
