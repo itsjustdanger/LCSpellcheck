@@ -26,8 +26,6 @@ function checkSpelling(editor: vscode.TextEditor, diagnostics: vscode.Diagnostic
     const diagArray: vscode.Diagnostic[] = [];
 
     diagnostics.clear();
-    console.log(`Misspelled words: ${misspelledWords.length}`);
-    misspelledWords.map(wordInfo => console.log(wordInfo.word));
     misspelledWords.forEach(wordInfo => {
         if (ignoreList.get(wordInfo.word)) {
             return;
@@ -65,9 +63,6 @@ function spellCheckDocument(text: string, dictionary: Trie<boolean | null>): { w
             index = text.indexOf(word, index);
 
             if (!isWordCorrect(word, dictionary)) {
-                console.log('Misspelled word: ' + word)
-                console.log(`Dict has ${word} | ${dictionary.get(word)}`)
-                console.log(`Dict has ${word.toLowerCase()} | ${dictionary.get(word.toLowerCase())}`)
                 misspelledWords.push({ word, index });
                 index += word.length;
             }
