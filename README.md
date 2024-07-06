@@ -22,9 +22,3 @@ Adds quick fix suggestions for misspelled words, the ability to add words to the
 Initial release.
 
 ---
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
