@@ -1,6 +1,6 @@
 {
-  "name": "lcspellcheck",
-  "displayName": "lcspellcheck",
+  "name": "LCSpellcheck",
+  "displayName": "LCSpellcheck",
   "description": "A simple-ish spellchecker for vscode",
   "version": "0.0.1",
   "engines": {
