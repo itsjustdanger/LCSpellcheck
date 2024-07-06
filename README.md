@@ -8,11 +8,11 @@ If you'd like to follow along with the development of this extension, [check the
 
 The spell checker displays misspelled words:
 
-\!\[Displays misspelled words\]\(images/fertures.png\)
+![Displays misspelled words](images/fertures.png)
 
 Adds quick fix suggestions for misspelled words, the ability to add words to the dictionary, and the ability to ignore words.
 
-\!\[Displays quick fix\]\(images/quickfix.png\)
+![Displays quick fix](images/quickfix.png)
 
 
 ## Release Notes
